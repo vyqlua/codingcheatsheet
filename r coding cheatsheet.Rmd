@@ -1,0 +1,14 @@
+---
+title: "R Coding Cheatsheet"
+author: "Matthew H. S. Ng & Verity Y.Q. Lua"
+date: "`r Sys.Date()`"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+TEMPORARY PLACEHOLDER RMD
