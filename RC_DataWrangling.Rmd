@@ -1,0 +1,233 @@
+---
+title: "RC_DataWrangling.Rmd"
+author: "Matthew Ng"
+date: "2023-09-21"
+output:
+  html_document:
+    css:
+    theme:       
+      bg: "#1D1F20"
+      fg: "#FFF"
+      primary: "#007360"
+      secondary: "#007360"
+      success: "#007360"
+    df_print: paged
+    toc: true
+    toc_float: true
+    code_folding: show
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, echo=FALSE}
+library(knitr)
+library(kableExtra)
+thematic::thematic_rmd()
+```
+
+
+# Introduction
+Hi! This is a R Cheatsheet done by Matthew HS Ng for everyone (and myself) as a guide for everything R that I have learnt thus far and for beginners to advanced users. Hope you find this helpful!
+
+# Administrative Steps
+This section will outline some of the absolute basics, how to set a working directory, install and load packages and load files into your environment.
+
+## Setting a working directory
+
+Setting a working directory is the first step for any project. It is recommended to create a folder specific to the project that you are working on. This is where you will place your raw data files and also where your cleaned data files will be exported to.
+
+```{r}
+#Setting a working directory
+#Copy paste the address of your file into the "" below
+#Remember to replace all "\" with "/"
+
+setwd("C:/Users/Matthew/Desktop/R Cheatsheet Project")
+```
+
+## Installing and Loading packages
+Packages are like programs in a computer. Packages are actually built with base R meaning that you could technically "do it the hard way" and code all of it in base R, but that's tedious and difficult. These packages are essential for us to efficiently run the processes that we want to do.
+
+```{r,message=FALSE}
+#In order to use a package we have to download it
+#NOTE: Remove the hash before the following line of code
+
+#install.packages("tidyverse")
+
+#After installing a package, you can delete the line above
+# But for subsequent uses we have to load it
+
+library(tidyverse)
+```
+
+Here is a list of some useful packages that can help with data wrangling. Next to these packages are notes that elaborate on what they do. (Click on "Code" on the bottom right to show this!) ->
+
+```{r, class.source = 'fold-hide'}
+#tideverse: includes dplyr, ggplot2, readr, purrr, tibble, ggplot2 (see below)
+
+#dplyr: essential for wrangling (filter, mutate etc)
+#readr: essential for reading different file types (e.g. .csv)
+#readxl
+#purrr: essential for doing looping/repetitive processes
+#ggplot2: essential for data visualization (Graphs/charts etc)
+
+
+```
+
+
+## Loading Files into the Environment
+Now that we have set up our RStudio with our packages, it's time to bring in our data file!
+
+```{eval=FALSE}
+#Ensure that your data file is in the same location as your working directory
+d <- read.csv("Yourfilehere.csv")
+
+#For other file formats, you will have to use slightly different commands
+#For excel files, use read_xl
+
+d <- read_xlsx("Yourfilehere.xlsx")
+
+```
+Notice that we have this part here "d <-"? This is telling RStudio to name our data frame "d". This allows us to make incremental changes in our data frames that are trackable and reproducable (more on that later). 
+
+Once we run this command, check out the "Environment" tab. It will show the number of observations (obs) and number of variables that this data frame has. This makes it easier for us to track our progress as we wrangle our data.
+
+# Basic Wrangling
+
+Having set up our RStudio, loaded packages and brought our data into the Environment. Now we can begin cleaning our data.
+
+## Identifying/Changing Data Formats
+
+The first thing you should do once you get a dataset is to examine the type of data that is available to you. Data can exist as a string of letters and/or numbers (characters), it could be purely whole numbers (integers), or maybe even in a particular format (e.g., date). Depending on the type of data, our approach to wrangling and cleaning the data may be different.
+
+```{r, echo=FALSE}
+#Creating data that we are going to practice on
+PartpiceantID <- c(1,2,3,4,5,6,7,8,9,10)
+Demo_Age = c(59,14,21,NA,41,56,72,74,22,999)
+Demo_Race = c("Chinese","chinese","Indian","Chinese","Chinese","Chinese","","CHINESE","Malay","Chinese")
+BADvariable = c("Delete", "this","variable",NA,NA,NA,NA,NA,NA,NA)
+GAD_1 = c(1,2,2,1,4,5,4,6,7,8)
+GAD_2 = c(2,1,1,3,5,4,4,8,8,8)
+GAD_3 = c(1,1,1,2,4,3,5,6,7,6)
+GAD_4 = c(2,1,1,1,3,3,4,5,6,7)
+GAD_5 = c(2,2,1,1,1,1,3,7,8,8)
+GAD_6 = c(2,1,1,1,1,2,4,6,4,7)
+
+d <- data.frame(PartpiceantID, Demo_Age, Demo_Race, BADvariable,GAD_1,GAD_2,GAD_3,GAD_4,GAD_5,GAD_6)
+
+print(d)
+```
+
+```{r}
+#To examine class of a single variable 
+#Notice how we use "d$variable name" to indicate we want to target this specific 
+#variable in this specific data frame.
+
+class(d$Demo_Age)
+
+#To examine class of data for each variable in a data frame
+class_list <- sapply(d, class)
+class_list
+
+#Different types of classes:
+#dbl: Any number that has a decimal in it
+#integer: An integer value (whole number only)
+#factor: A categorical variable (e.g., Male or Female)
+#character: A string of letters and or numbers (e.g., names)
+```
+
+```{r, message = FALSE}
+#Change class of a variable
+#use as.x, where x is the class you want to change your variable to
+as.factor(d$ParticipantID) #to change ParticipantID from integer to factor
+```
+
+# Basic data cleaning {.tabset}
+Now that we understand the class of our data we can start wrangling our data. Here are some of the functions that are commonly used and how it affects our data. Remember to use continue to create new data frames so that we have a step-by-step trackable process about how our data is changing.
+
+
+## Renaming variables
+```{r}
+#Rename a variable
+d1 <- d %>%
+  dplyr::rename(PatientID=PartpiceantID) #rename(new variable name = old variable name)
+
+```
+
+## Filtering variables
+We can filter variables to remove cases when they are unusable or not needed for our analysis (e.g., blank data). The syntax here is a bit confusing, but basically we are filtering the data we want. E.g., if we want to remove blank data, we want to filter data that is not blank.
+```{r}
+#Filter a variable
+d2 <- d1 %>%
+  dplyr::filter(!is.na(Demo_Age), #filter for data that is NOT blank (aka remove cases that are blank)
+                Demo_Race != "", #filter for race that is NOT blank (note race is a string, thats why we use "")
+                Demo_Age <=99 & Demo_Age>=18 #filter for age that is between 18 - 99 years of age
+                )
+```
+
+## Selecting variables
+Ensuring that our data has only the variables that we need is important!
+```{r}
+#Selecting variables (two approaches)
+d3 <- d2 %>%
+  dplyr::select(-BADvariable) #removes this specific variable
+
+d3 <- d2 %>%
+  dplyr::select(PatientID,Demo_Age,Demo_Race) #Selects specific variables
+```
+
+## Merging data
+Say you have new variables from your patients that you wish to add to your current data set
+```{r}
+#Merging one set of data with another
+#New variable with the same participants
+DepressionScore = c(15,22,13,9,14,0,1,5,8,22)
+PatientID <- c(1,2,3,4,5,6,7,8,9,10)
+e <- data.frame(PatientID, DepressionScore)
+
+#Merging data
+d7 <- merge(d6,e,
+            by ="PatientID", all = FALSE) #all = TRUE will merge all data in both data sets. Try it to see the effect!
+```
+
+
+## Group by
+WIP
+```{r}
+
+```
+
+# Computing Variables
+## Recoding variables
+Sometimes we have to create new variables that recode existing variables to use in our analysis (e.g., Male = 0, Female = 1). Hence, we have to use the mutate function!
+```{r}
+#Recoding variables based on levels
+d4 <- d3 %>%
+  dplyr::mutate(Demo_Age_Categories = case_when(Demo_Age <= 30 ~ "Young",
+                                             Demo_Age <= 50 ~ "Middle",
+                                             Demo_Age >= 50 ~ "Old"))
+#Recoding variables 
+d5 <- d4 %>%
+  dplyr::mutate(Demo_Age_Recoded = case_when (Demo_Age_Categories == "Young" ~ 0,
+                                              TRUE ~ 1
+  ))
+
+#Recoding variables based on string
+d6 <- d5 %>%
+  dplyr::mutate(Demo_Race_Recoded = case_when(grepl("chinese", d5$Demo_Race, ignore.case = TRUE) ~ 1,
+                                              grepl("malay", d5$Demo_Race, ignore.case = TRUE) ~ 2,
+                                              grepl("indian", d5$Demo_Race, ignore.case = TRUE) ~ 3,
+                                              TRUE ~ NA))
+```
+
+## Deriving variables
+```{r}
+MFISscore = rowSums(select(d, starts_with("MFIS_")), na.rm = TRUE)
+```
+
+## Advanced Wrangling (WIP)
+# Looping
+```{r}
+
+map_df(1:5, sqrt)
+```
+

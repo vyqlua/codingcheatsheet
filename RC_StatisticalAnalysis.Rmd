@@ -1,0 +1,122 @@
+---
+title: "RC_Statistical Analysis.Rmd"
+author: "Matthew Ng"
+date: "2023-09-21"
+output:
+  html_document:
+    css:
+    theme:       
+      bg: "#1D1F20"
+      fg: "#FFF"
+      primary: "#007360"
+      secondary: "#007360"
+      success: "#007360"
+    df_print: paged
+    toc: true
+    toc_float: true
+    code_folding: show
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, echo=FALSE}
+library(knitr)
+library(kableExtra)
+thematic::thematic_rmd()
+```
+
+# Introduction
+Hi! This is a R Cheatsheet done by Matthew HS Ng for everyone (and myself) as a guide for everything R that I have learnt thus far and for beginners to advanced users. Hope you find this helpful!
+
+# Administrative Steps
+We will first start by executing our administrative steps (loading packages, setting working directories, and importing our data). For more information on how to do that, please check out the Data Wrangling section of the R Cheatsheet Project
+
+```{r}
+#loading packages
+library(dplyr) #data wrangling
+library(psych) #descriptive statistics
+library(lme4) #multilevel modelling
+library(lmerTest) #multilevel modelling
+library(corrtable) #for correlation table
+library(car) #for additional applied regression support
+```
+
+```{r}
+#loading datasets
+setwd("C:/Users/Matthew/Desktop/R Cheatsheet Project")
+dataset1 <- readxl::read_xlsx("RC_AnalysisPracticeDataset_1.xlsx")
+#dataset2 <- 
+
+```
+
+Dataset 1 is a standard wide dataset with 500 observation and 18 variables. Variables include demograhpic information, self-report data and some physiological measures. This dataset is ideal for basic statistical analyses
+
+Dataset 2: (TBC)
+
+# Descriptive Statistics
+
+For descriptive statistics, we usually use the psych package to extract the common descriptive statistics for the dataset
+```{r}
+#descriptive stats
+dataset1_descriptives = psych::describe(dataset1[,c("Demo_Age","Demo_Male","Demo_White","Demo_SES","Demo_Married","HADS_A","HADS_D","Sleep_hours","Exercise_mins","BFI_O","BFI_C","BFI_E","BFI_A","BFI_N","Screentime_mins","SocialSupport","DERS")])
+
+dataset1_descriptives1 = dataset1_descriptives %>%
+  select("n", "mean", "sd", "min", "max","skew","kurtosis") #can be changed according to what descriptives are needed.
+
+dataset1_descriptives1
+```
+
+# Cronbach's Alpha
+```{r}
+cronalpha <- alpha(select(dataset1,GAD_2,GAD_3,GAD_4,GAD_5))
+```
+
+
+# Correlation
+For correlation, we usually create a correlation table using the corrtab package!
+```{r}
+corrtab <- correlation_matrix(dataset1, #the dataset
+                              type="pearson", #can be pearson or spearman
+                              digits=3, #number of decimal places
+                              decimal.mark=".", 
+                              use="lower", 
+                              show_significance=TRUE,
+                              replace_diagonal=FALSE,
+                              replacement="" )
+
+#write.csv(corrtab,"correlationtable.csv") #<- to export corrtab to excel format
+
+#displaying correlation table in themed rmd!
+kable(corrtab, format = "html", digits = 3) %>%
+  column_spec (2:18, border_left = T, border_right = T) %>%
+    row_spec(0, background = "#1D1F20") %>%
+  kable_styling(latex_options = c("hold_position","scale_down")) %>%
+  scroll_box(width = "800px", height = "100%")
+
+```
+
+# Means Tests
+```{r}
+ttest <- t.test(Demo_Age ~ Demo_Male, # 
+                data = dataset1,
+                paired = FALSE, #TRUE = dependent samples t test
+                var.equal = TRUE #FALSE = Welch's t test
+                )
+
+ttestES <- effectsize::effectsize(ttest)
+```
+
+# Chi Squared Tests
+```{r}
+chisq <- chisq.test(Demo_Age ~ Demo_Male, # 
+                data = dataset1,
+                paired = FALSE, #TRUE = dependent samples t test
+                var.equal = TRUE #FALSE = Welch's t test
+                )
+chisqES <- effectsize::effectsize(ttest)
+```
+
+# General Linear Models
+
+
+## Linear Regression
